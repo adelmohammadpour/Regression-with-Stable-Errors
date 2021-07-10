@@ -1,0 +1,29 @@
+rm(list=ls())
+require('stable')
+require('quantreg')
+n=50
+delta=0;gam=1;beta0=0;alfa0=1.5;
+b0=2
+x=runif(n,0,100)
+e=rstable(n,alfa0,beta0,gam,delta,1)
+y=b0*x+e
+############QR##########
+taus=c(.3,.5,.8)
+q.3=(rq(y~x-1,tau=.3))
+q.5=(rq(y~x-1,tau=.5))
+q.8=(rq(y~x-1,tau=.8))
+Q.3=coef(q.3)
+Q.5=coef(q.5)
+Q.8=coef(q.8)
+rq.3=residuals(q.3)
+iniq.3=stable.fit.mle.restricted(rq.3, c(alfa0,beta0,1,0), restriction=c(0,0,1,1), param=1)
+alfaq.3=iniq.3[1]
+betaq.3=iniq.3[2]
+rq.5=residuals(q.5)
+iniq.5=stable.fit.mle.restricted(rq.5, c(alfa0,beta0,1,0), restriction=c(0,0,1,1), param=1)
+alfaq.5=iniq.5[1]
+betaq.5=iniq.5[2]
+rq.8=residuals(q.8)
+iniq.8=stable.fit.mle.restricted(rq.8, c(alfa0,beta0,1,0), restriction=c(0,0,1,1), param=1)
+alfaq.8=iniq.8[1]
+betaq.8=iniq.8[2]
