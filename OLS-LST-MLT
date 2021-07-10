@@ -1,0 +1,55 @@
+rm(list=ls())
+require('stable')
+n=50
+delta=0;gam=1;beta0=0;alfa0=1.5;
+b0=2
+########OLS############
+  x=runif(n,0,100)
+  e=rstable(n,alfa0,beta0,gam,delta,1)
+  y=b0*x+e
+  bols=lm(y~x-1)$coefficients
+  rols=lm(y~x-1)$residuals
+ ##########cut-off points###########
+cutp=stable.fit.mle.restricted(rols, c(alfa0,beta0,1,0), restriction=c(0,0,1,1), param=1)
+
+if(round(cutp[2],4) < 1 & round(cutp[2],4)> -1){
+c=ceiling(2/cutp[1]);d=floor(n+1-(2/cutp[1]))
+}
+if(round(cutp[1],4)>=1 & round(cutp[2],4)==1 |round(cutp[2],4)==-1){
+c=ceiling(2/cutp[1]);d=floor(n+1-(2/cutp[1]))
+}
+if(round(cutp[1],4)<1 & round(cutp[2],4)==1 |round(cutp[2],4)==-1){
+c=ceiling(2/cutp[1]);d=floor(n+1-(2/cutp[1]))
+}
+c;d
+  #############LST##
+  ml=matrix(c(y,x,e),n)
+  mmlst=ml[order(ml[,3]),]
+  mlst=data.frame(mmlst[c:d,])
+  yt=mlst[,1];xt=mlst[,2];et=mlst[,3]
+  blst=lm(yt~xt-1)$coefficients
+  blst
+  rt=y-blst*x
+  init=stable.fit.mle.restricted(rt, c(alfa0,beta0,1,0), restriction=c(0,0,1,1), param=1)
+   ############mlt#########
+  m=matrix(c(y,x,e),n)
+  mm=m[order(m[,3]),]
+  mt=data.frame(mm[c:d,])
+  yt=mt[,1];xt=mt[,2]
+  F=function(par){
+    y=mm[,1]
+    x=mm[,2]
+    bet=par[1]
+    i=c:d
+    f3=function(i,beta){log(dstable(y[i]-(beta*x[i]),init[1],init[2],1,0,1))}  
+    g=-(log(factorial(n)/(factorial(c-1)*factorial(n-d)))+(c-1)*log(pstable((y[c]-bet*x[c]),init[1],init[2],1,0,1))+(n-d)*log(1-pstable((y[d]-bet*x[d]),init[1],init[2],1,0,1))+sum(sapply(i,f3,beta=bet)))
+  }
+  cc=lm(yt~xt-1)$coefficients
+  bmlt=nlminb(cc,F)$par
+  x=m[,2];y=m[,1]
+  rmlt=y-bmlt*x
+  inimlt=stable.fit.mle.restricted(rmlt, c(alfa0,beta0,1,0), restriction=c(0,0,1,1), param=1)
+  alfamlt=inimlt[1]
+  betamlt=inimlt[2]
+    msemlt=abs(bmlt[1]-b0)
+  bmlt;msemlt
