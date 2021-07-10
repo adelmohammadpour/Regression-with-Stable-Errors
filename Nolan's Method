@@ -1,0 +1,24 @@
+rm(list=ls())
+require('stable')
+require('quantreg')
+n=50
+delta=0;gam=1;beta0=0;alfa0=1.5;
+b0=2
+
+  ##############Nolan####
+  x=runif(n,0,100)
+  e=rstable(n,alfa0,beta0,gam,delta,1)
+  y=b0*x+e
+  bols=lm(y~x-1)$coefficients
+   m=matrix(c(y,x,e),n)
+  mm=m[order(m[,3]),]
+  mt=data.frame(mm[(.1*n):(.9*n),])
+  yt=mt[,1];xt=mt[,2]
+  rml=lm(yt~xt-1)$residual
+    ini=stable.fit.mle.restricted(rml,c(alfa0,beta0,1,0), restriction=c(0,0,1,1),1)
+  inls=lm(yt~xt-1)$coefficients
+  like = function(teta)
+    -sum(log(dstable((y-(x*teta[1])),teta[2],teta[3],1,0,param=1 )))
+  bnol=nlminb(c(inls[1],ini[1],ini[2]), like)$par
+    msenol=abs(bnol[1]-b0)
+bnol[1];msenol
